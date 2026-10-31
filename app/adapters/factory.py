@@ -1,7 +1,7 @@
 """
 Adapter factory - selects providers based on config.
 """
-from app.adapters.base import STTAdapter, TTSAdapter, WhatsAppAdapter
+from app.adapters.base import STTAdapter, TTSAdapter, WhatsAppAdapter, PhoneAdapter
 from app.config import get_settings
 from typing import Type
 import logging
@@ -69,3 +69,13 @@ def get_whatsapp_adapter() -> WhatsAppAdapter:
         )
     else:
         raise ValueError(f"Unknown WhatsApp provider: {provider}")
+
+
+def get_phone_adapter() -> PhoneAdapter:
+    """Get Phone call adapter."""
+    from app.adapters.phone.twilio_phone import TwilioPhoneAdapter
+    return TwilioPhoneAdapter(
+        account_sid=settings.twilio_account_sid,
+        auth_token=settings.twilio_auth_token,
+        from_number=settings.twilio_phone_number
+    )

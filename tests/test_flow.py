@@ -94,3 +94,13 @@ def test_twilio_gather_webhook_flow(client):
     assert response.status_code == 200
     assert "xml" in response.headers["content-type"]
     assert "<Response>" in response.text
+
+
+def test_initiate_call_endpoint(client):
+    """Verify call initiation endpoint."""
+    response = client.post("/api/v1/calls/initiate", json={"to_phone": "+919876543210"})
+    assert response.status_code == 200
+    data = response.json()
+    assert "call_sid" in data
+    assert data["status"] == "queued" or data["simulated"] is True
+

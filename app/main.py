@@ -5,13 +5,14 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, Form, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.services.database import init_db, get_db
 from app.models.order import OrderModel, OrderResponse
 from app.agent.voice_agent import get_voice_agent
-from app.adapters.factory import get_whatsapp_adapter
+from app.adapters.factory import get_whatsapp_adapter, get_phone_adapter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -141,6 +142,20 @@ async def send_whatsapp_receipt(order_id: int, phone: str, items: list, total: f
         await adapter.send_message(to_phone=phone, message=msg)
     except Exception as e:
         logger.error(f"Failed to send WhatsApp message: {e}")
+
+
+class InitiateCallRequest(BaseModel):
+    to_phone: str
+    webhook_url: str = ""
+
+
+@app.post("/api/v1/calls/initiate")
+async def initiate_call_endpoint(payload: InitiateCallRequest):
+    """Initiate outbound AI voice call to customer."""
+    adapter = get_phone_adapter()
+    webhook = payload.webhook_url or f"{settings.webhook_base_url.rstrip('/')}/webhooks/twilio/voice"
+    result = await adapter.initiate_call(to_phone=payload.to_phone, webhook_url=webhook)
+    return result
 
 
 @app.get("/api/v1/orders/{order_id}", response_model=OrderResponse)
