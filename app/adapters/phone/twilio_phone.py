@@ -38,7 +38,6 @@ class TwilioPhoneAdapter(PhoneAdapter):
             to=to_phone,
             from_=self.from_number,
             url=webhook_url,
-            method="POST"
         )
 
         return {
